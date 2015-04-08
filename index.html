@@ -1,0 +1,228 @@
+<html>
+<head>
+    <title>Title</title>
+    <style>
+        body { margin: 0; }
+        canvas { width: 100%; height: 100%;}
+    </style>
+</head>
+<body>
+<script src="three.min.js"></script>
+<script>
+
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(120, window.innerWidth/window.innerHeight, 0.1, 1000 );
+
+    var menuinstructions = new Audio("menuinstructions.wav");
+    var soniczoom = new Audio("soniczoom.wav");
+    var training = new Audio("training.wav");
+    var play = new Audio("startgame.wav");
+    var highscores = new Audio("highscores.wav");
+    var quit = new Audio("quit.wav");
+
+    var renderer = new THREE.WebGLRenderer();
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    document.body.appendChild( renderer.domElement );
+
+    var text2 = document.createElement('div');
+    text2.style.position = 'absolute';
+    text2.style.width = 100;
+    text2.style.height = 100;
+    text2.innerHTML = "Tutorial";
+    text2.style.top = 285 + 'px';
+    text2.style.left = window.innerWidth*.62 + 'px';
+    text2.style.color = "Yellow";
+    text2.style.fontSize = 50 + 'px';
+    document.body.appendChild(text2);
+
+    var text3 = document.createElement('div');
+    text3.style.position = 'absolute';
+    text3.style.width = 100;
+    text3.style.height = 100;
+    text3.innerHTML = "Play";
+    text3.style.top = 360 + 'px';
+    text3.style.left = window.innerWidth*.62 + 'px';
+    text3.style.color = "Red";
+    text3.style.fontSize = 50 + 'px';
+    document.body.appendChild(text3);
+
+    var text4 = document.createElement('div');
+    text4.style.position = 'absolute';
+    text4.style.width = 250;
+    text4.style.height = 100;
+    text4.innerHTML = "High Scores";
+    text4.style.top = 445 + 'px';
+    text4.style.left = window.innerWidth*.62 + 'px';
+    text4.style.color = "Red";
+    text4.style.fontSize = 50 + 'px';
+    document.body.appendChild(text4);
+
+    var text5 = document.createElement('div');
+    text5.style.position = 'absolute';
+    text5.style.width = 100;
+    text5.style.height = 100;
+    text5.innerHTML = "Quit";
+    text5.style.top = 525 + 'px';
+    text5.style.left = window.innerWidth*.62 + 'px';
+    text5.style.color = "Red";
+    text5.style.fontSize = 50 + 'px';
+    document.body.appendChild(text5);
+
+
+    var geometry = new THREE.BoxGeometry( 1, 1, 1 );
+    var material = new THREE.MeshBasicMaterial({
+        map: THREE.ImageUtils.loadTexture('cointex.bmp')
+    });
+    var cube = new THREE.Mesh( geometry, material );
+    scene.add( cube );
+
+    camera.position.z = 5;
+
+    var texture = THREE.ImageUtils.loadTexture( 'menu.jpg' );
+    var backgroundMesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(2, 2, 0),
+            new THREE.MeshBasicMaterial({
+                map: texture
+            }));
+
+    backgroundMesh.material.depthTest = false;
+    backgroundMesh.material.depthWrite = false;
+
+    // Create your background scene
+    var backgroundScene = new THREE.Scene();
+    var backgroundCamera = new THREE.Camera();
+    backgroundScene.add(backgroundCamera );
+    backgroundScene.add(backgroundMesh );
+
+    camera.setViewOffset(window.innerWidth, window.innerHeight, window.innerWidth * -.06, window.innerHeight *.1, window.innerWidth, window.innerHeight);
+    var arrowDir = 0;
+
+    document.onkeydown = checkKey;
+
+    soniczoom.play();
+    var currentrunning = menuinstructions;
+    currentrunning.play();
+
+    function checkKey(e){
+        // Up Arrow
+        if(e.keyCode == '38') {
+            if(arrowDir == 0){
+                camera.setViewOffset(window.innerWidth, window.innerHeight, window.innerWidth * -.06, window.innerHeight *-.2, window.innerWidth, window.innerHeight);
+                camera.updateProjectionMatrix();
+                text2.style.color = "Red";
+                text5.style.color = "Yellow";
+                arrowDir = 3;
+                currentrunning.pause();
+                currentrunning.currentTime = 0;
+                currentrunning = quit;
+                currentrunning.play();
+            } else if (arrowDir == 1){
+                camera.setViewOffset(window.innerWidth, window.innerHeight, window.innerWidth * -.06, window.innerHeight *.1, window.innerWidth, window.innerHeight);
+                camera.updateProjectionMatrix();
+                text3.style.color = "Red";
+                text2.style.color = "Yellow";
+                arrowDir = 0;
+                currentrunning.pause();
+                currentrunning.currentTime = 0;
+                currentrunning = training;
+                currentrunning.play();
+            }else if (arrowDir == 2) {
+                camera.setViewOffset(window.innerWidth, window.innerHeight, window.innerWidth * -.06, window.innerHeight *-.0001, window.innerWidth, window.innerHeight);
+                camera.updateProjectionMatrix();
+                text4.style.color = "Red";
+                text3.style.color = "Yellow";
+                arrowDir = 1;
+                currentrunning.pause();
+                currentrunning.currentTime = 0;
+                currentrunning = play;
+                currentrunning.play();
+            } else if (arrowDir == 3) {
+                camera.setViewOffset(window.innerWidth, window.innerHeight, window.innerWidth * -.06, window.innerHeight *-.1, window.innerWidth, window.innerHeight);
+                camera.updateProjectionMatrix();
+                text5.style.color = "Red";
+                text4.style.color = "Yellow";
+                arrowDir = 2;
+                currentrunning.pause();
+                currentrunning.currentTime = 0;
+                currentrunning = highscores;
+                currentrunning.play();
+            }
+        }
+        else if (e.keyCode == '40') {
+            // Down Arrow
+            if(arrowDir == 0){
+                camera.setViewOffset(window.innerWidth, window.innerHeight, window.innerWidth * -.06, window.innerHeight *-.0001, window.innerWidth, window.innerHeight);
+                camera.updateProjectionMatrix();
+                text2.style.color = "Red";
+                text3.style.color = "Yellow";
+                arrowDir = 1;
+                currentrunning.pause();
+                currentrunning.currentTime = 0;
+                currentrunning = play;
+                currentrunning.play();
+            } else if (arrowDir == 1){
+                camera.setViewOffset(window.innerWidth, window.innerHeight, window.innerWidth * -.06, window.innerHeight *-.1, window.innerWidth, window.innerHeight);
+                camera.updateProjectionMatrix();
+                text3.style.color = "Red";
+                text4.style.color = "Yellow";
+                arrowDir = 2;
+                currentrunning.pause();
+                currentrunning.currentTime = 0;
+                currentrunning = highscores;
+                currentrunning.play();
+            }else if (arrowDir == 2) {
+                camera.setViewOffset(window.innerWidth, window.innerHeight, window.innerWidth * -.06, window.innerHeight *-.2, window.innerWidth, window.innerHeight);
+                camera.updateProjectionMatrix();
+                text4.style.color = "Red";
+                text5.style.color = "Yellow";
+                arrowDir = 3;
+                currentrunning.pause();
+                currentrunning.currentTime = 0;
+                currentrunning = quit;
+                currentrunning.play();
+            } else if (arrowDir == 3) {
+                camera.setViewOffset(window.innerWidth, window.innerHeight, window.innerWidth * -.06, window.innerHeight *.1, window.innerWidth, window.innerHeight);
+                camera.updateProjectionMatrix();
+                text5.style.color = "Red";
+                text2.style.color = "Yellow";
+                arrowDir = 0;
+                currentrunning.pause();
+                currentrunning.currentTime = 0;
+                currentrunning = training;
+                currentrunning.play();
+            }
+        } else if (e.keyCode == '13'){
+            //Enter
+            if(arrowDir == 0){
+                window.open("http://www.cs.unc.edu/Courses/comp426-f14/jarretc/comp523/Tutorial/tutorial.html","_self");
+            } else if (arrowDir == 1){
+                //window.open();
+            }else if (arrowDir == 2) {
+                window.open("http://wwwx.cs.unc.edu/~maxpaul/", "_self");
+            } else if (arrowDir == 3) {
+                //window.open();
+            }
+        }
+    }
+
+    var render = function () {
+        requestAnimationFrame( render );
+
+        cube.rotation.x += 0.1;
+        cube.rotation.y += 0.1;
+
+        renderer.autoClear = false;
+        renderer.clear();
+        renderer.render(backgroundScene, backgroundCamera);
+        renderer.render(scene, camera);
+    };
+
+    render();
+</script>
+
+<audio id = "back" autoplay loop>
+    <source src="music.wav" type="audio/wav">
+</audio>
+
+</body>
+</html>
