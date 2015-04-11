@@ -34,17 +34,24 @@
 		var points2 = [];
 		var points3 = [];
 
-        var prevPoint = new THREE.Vector3(0, 0, 0);
+		var randomVertex;
 
+        var prevPoint = new THREE.Vector3(0, 0, 0);
+		var increment = 0;
         for (var i = 0; i < 50; i++){
-            var randomX = prevPoint.x + 15 + Math.round(Math.random() * 1.5);
-            var randomY = prevPoint.y + 15 + Math.round(Math.random() * 1.5);
-            var randomZ = prevPoint.z + 15 + Math.round(Math.random() * 1.5);
+            var randomX = prevPoint.x + 15;// + Math.round(Math.random() * 1.5);
+            var randomY = prevPoint.y + 15;// + Math.round(Math.random() * 1.5);
+            var randomZ = prevPoint.z + 15;// + Math.round(Math.random() * 1.5);
 
             var midx = (randomX + prevPoint.x)/2; 
             var midy = (randomY + prevPoint.y)/2;
             var midz = (randomZ + prevPoint.z)/2;
 
+			if(increment == 30){
+				randomVertex = new THREE.Vector3(0,randomY, randomZ);
+				firsttime = true;
+			}
+			increment++;
             prevPoint.x = randomX;
             prevPoint.y = randomY;
             prevPoint.z = randomZ;
@@ -80,6 +87,8 @@
 		var tube, tubeMesh, tubeMesh2, tubeMesh3;
 		var animation = false, lookAhead = false;
 		var scale = 4;
+
+		var cube;
 
 		function addTube() {
 			var segments = 100;
@@ -167,16 +176,27 @@
 			scene.add( light );
 
 			parent = new THREE.Object3D();
-			parent.position.y = 100;
+			//parent.position.y = 100;
 			scene.add( parent );
 
 			parent2 = new THREE.Object3D();
-			parent2.position.y = 100;
+			//parent2.position.y = 100;
 			scene.add( parent2 );
 
 			parent3 = new THREE.Object3D();
-			parent3.position.y = 100;
+			//parent3.position.y = 100;
 			scene.add( parent3 );
+
+			var cubegeometry = new THREE.BoxGeometry( 1,1, 1 );
+			var cubematerial = new THREE.MeshBasicMaterial({
+				map: THREE.ImageUtils.loadTexture('cointex.bmp')
+			});
+			cube = new THREE.Mesh( cubegeometry, cubematerial );
+			cube.position.x = -13;
+			cube.position.y = randomVertex.y;
+			cube.position.z = randomVertex.z;
+			cube.scale.set(scale, scale, scale);
+			scene.add( cube );
 
 			//add tunnel
         	var tempgeom = new THREE.TubeGeometry(extrudePath4, 256, 12, 70, false);
@@ -186,7 +206,7 @@
         	var tempmesh = new THREE.Mesh( tempgeom, tempmaterial );
 
         	tempmesh.scale.set( scale, scale, scale );
-        	tempmesh.position.y = 100;
+        	//tempmesh.position.y = 100;
         	scene.add(tempmesh);
 
 			splineCamera = new THREE.PerspectiveCamera( 84, window.innerWidth / window.innerHeight, 0.01, 1000 );
@@ -195,8 +215,8 @@
 
 			addTube();
 
-			cameraEye = new THREE.Mesh( new THREE.SphereGeometry( 5 ), new THREE.MeshBasicMaterial( { color: 0xdddddd } ) );
-			parent.add( cameraEye );
+			//cameraEye = new THREE.Mesh( new THREE.SphereGeometry( 5 ), new THREE.MeshBasicMaterial( { color: 0xdddddd } ) );
+			//parent.add( cameraEye );
 
 			renderer = new THREE.WebGLRenderer( { antialias: true } );
 			renderer.setClearColor( 0xf0f0f0 );
@@ -250,6 +270,9 @@
 				pos = tube3.parameters.path.getPointAt( t );
 			}
 
+			//cube.position = tube.parameters.path.getPointAt(t);
+			//cube.position.y += 5;
+			//cube.position.z += 5;
 			pos.multiplyScalar( scale );
 
 			// interpolation
@@ -271,7 +294,7 @@
 			pos.add( normal.clone().multiplyScalar( offset ) );
 
 			splineCamera.position.copy( pos );
-			cameraEye.position.copy( pos );
+			//cameraEye.position.copy( pos );
 
 			// Camera Orientation 1 - default look at
 			// splineCamera.lookAt( lookAt );
@@ -287,7 +310,7 @@
 
 			parent.rotation.y += ( targetRotation - parent.rotation.y ) * 0.05;
 
-			renderer.render( scene, animation === true ? splineCamera : camera );
+			renderer.render( scene, animation === true ? splineCamera : splineCamera );
 		}
 	</script>
 	</body>
