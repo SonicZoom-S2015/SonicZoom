@@ -1,0 +1,307 @@
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - geometry - shapes</title>
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #f0f0f0;
+				margin: 0px;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+	<body>
+		<script src="three.min.js"></script>
+		<script type="text/javascript">
+		var container, stats;
+
+		var camera, scene, renderer, splineCamera, cameraEye;
+
+		var text, plane;
+
+		var targetRotation = 0;
+
+		var windowHalfX = window.innerWidth / 2;
+		var windowHalfY = window.innerHeight / 2;
+
+		var binormal = new THREE.Vector3();
+		var normal = new THREE.Vector3();
+
+		var Middlepoints = [];
+		var Leftpoints = [];
+		var Rightpoints = [];
+
+		var randomVertex;
+		var increment = 0;
+
+		var prevPoint = new THREE.Vector3(0, 0, 0);
+        for (var i = 0; i < 50; i++){
+            var randomX = prevPoint.x + 15;// + Math.round(Math.random() * 1.5);
+            var randomY = prevPoint.y + 15;// + Math.round(Math.random() * 1.5);
+            var randomZ = prevPoint.z + 15;// + Math.round(Math.random() * 1.5);
+
+            var midx = (randomX + prevPoint.x)/2; 
+            var midy = (randomY + prevPoint.y)/2;
+            var midz = (randomZ + prevPoint.z)/2;
+
+			if(increment == 30){
+				randomVertex = new THREE.Vector3(0,randomY, randomZ);
+				firsttime = true;
+			}
+			increment++;
+
+            prevPoint.x = randomX;
+            prevPoint.y = randomY;
+            prevPoint.z = randomZ;
+
+            Middlepoints.push(new THREE.Vector3(0, midy, midz));
+			Middlepoints.push(new THREE.Vector3(0, randomY, randomZ));
+			Leftpoints.push(new THREE.Vector3(0, midy, midz-5));
+            Leftpoints.push(new THREE.Vector3(0, randomY, randomZ-5));
+            Rightpoints.push(new THREE.Vector3(0, midy, midz+5));
+            Rightpoints.push(new THREE.Vector3(0, randomY, randomZ+5));
+        }
+
+		var MiddleSpline = new THREE.SplineCurve3(Middlepoints);
+		var LeftSpline = new THREE.SplineCurve3(Leftpoints);
+		var RightSpline = new THREE.SplineCurve3(Rightpoints);
+
+		MiddlePath = MiddleSpline;
+		LeftPath = LeftSpline;
+		RightPath = RightSpline;
+
+		PipePath = MiddleSpline;
+
+		var s;
+		//Init
+
+		//Time
+		var t;
+
+		//Camera Position
+		var pos;
+
+		//Current location of camera
+		//Middle = 0
+		//Left = 1
+		//Right = 2
+		var CameraLane = 0;
+
+		//All three paths
+		var Middleparent, Leftparent, Rightparent;
+		var MiddleLaneMesh, LeftLaneMesh, RightLaneMesh;
+		var MiddleTube, LeftTube, RightTube;
+		var animation = false, lookAhead = false;
+		var scale = 4;
+
+		var cube;
+
+		function addTube() {
+			var segments = 100;
+
+			var radiusSegments = 3;
+
+			MiddleTube = new THREE.TubeGeometry(MiddleSpline, segments, 2, radiusSegments, false);
+			LeftTube = new THREE.TubeGeometry(LeftSpline, segments, 2, radiusSegments, false);
+			RightTube = new THREE.TubeGeometry(RightSpline, segments, 2, radiusSegments, false);
+
+			addGeometry(MiddleTube, 0xff00ff);
+
+			addGeometry(LeftTube, 0xff00ff);
+
+			addGeometry(RightTube, 0xff00ff);
+
+			setScale();
+
+		}
+
+		function setScale() {
+			MiddleLaneMesh.scale.set( scale, scale, scale );
+			LeftLaneMesh.scale.set( scale, scale, scale );
+			RightLaneMesh.scale.set(scale, scale, scale);
+		}
+
+
+		function addGeometry( geometry, color ) {
+			// 3d shape
+			if(!MiddleLaneMesh){
+			MiddleLaneMesh = THREE.SceneUtils.createMultiMaterialObject( geometry, [
+				new THREE.MeshLambertMaterial({
+					color: color
+				}),
+				new THREE.MeshBasicMaterial({
+					color: 0x000000,
+					opacity: 0.3,
+					wireframe: true,
+					transparent: true
+			})]);
+				Middleparent.add( MiddleLaneMesh );
+			} else if(!LeftLaneMesh) {
+				LeftLaneMesh = THREE.SceneUtils.createMultiMaterialObject( geometry, [
+				new THREE.MeshLambertMaterial({
+					color: color
+				}),
+				new THREE.MeshBasicMaterial({
+					color: 0x000000,
+					opacity: 0.3,
+					wireframe: true,
+					transparent: true
+			})]);
+			Leftparent.add( LeftLaneMesh );
+			} else {
+				RightLaneMesh = THREE.SceneUtils.createMultiMaterialObject( geometry, [
+				new THREE.MeshLambertMaterial({
+					color: color
+				}),
+				new THREE.MeshBasicMaterial({
+					color: 0x000000,
+					opacity: 0.3,
+					wireframe: true,
+					transparent: true
+			})]);
+			Rightparent.add( RightLaneMesh );
+			}
+		}
+
+		init();
+		animate();
+		animation = true;
+
+		function init() {
+			container = document.createElement('div');
+			document.body.appendChild(container);
+
+			camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.01, 1000);
+			camera.position.set(0, 50, 500);
+
+			scene = new THREE.Scene();
+
+			var light = new THREE.DirectionalLight( 0xffffff );
+			light.position.set( 0, 0, 1 );
+			scene.add( light );
+
+			Middleparent = new THREE.Object3D();
+			scene.add( Middleparent );
+
+			Leftparent = new THREE.Object3D();
+			scene.add( Leftparent );
+
+			Rightparent = new THREE.Object3D();
+			scene.add( Rightparent );
+
+			var cubegeometry = new THREE.BoxGeometry( 1,1, 1 );
+			var cubematerial = new THREE.MeshBasicMaterial({
+				map: THREE.ImageUtils.loadTexture('cointex.bmp')
+			});
+			cube = new THREE.Mesh( cubegeometry, cubematerial );
+			cube.position.x = -13;
+			cube.position.y = randomVertex.y;
+			cube.position.z = randomVertex.z;
+			cube.scale.set(scale, scale, scale);
+			scene.add( cube );
+
+			//add tunnel
+        	var TunnelGeometry = new THREE.TubeGeometry(PipePath, 256, 12, 70, false);
+        	var TunnelMaterial = new THREE.MeshNormalMaterial({transparent: false, opacity: 0.8, side:THREE.DoubleSide});
+        	var TunnelMesh = new THREE.Mesh( TunnelGeometry, TunnelMaterial );
+        	TunnelMesh.scale.set( scale, scale, scale );
+        	scene.add(TunnelMesh);
+
+			splineCamera = new THREE.PerspectiveCamera( 84, window.innerWidth / window.innerHeight, 0.01, 1000 );
+
+			Middleparent.add( splineCamera );
+
+			addTube();
+
+			renderer = new THREE.WebGLRenderer( { antialias: true } );
+			renderer.setClearColor( 0xf0f0f0 );
+			renderer.setPixelRatio( window.devicePixelRatio );
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			container.appendChild( renderer.domElement );
+
+			document.onkeydown = checkKey;
+			
+		}
+
+		function checkKey(e){
+			// left arrow
+		    if(e.keyCode == '37') {
+		    	//alert("Left arrow");
+		    	if(CameraLane == 0){
+		    		pos = LeftTube.parameters.path.getPointAt( t );
+		    		CameraLane = 1;
+		    	} else if (CameraLane == 2){
+		    		pos = MiddleTube.parameters.path.getPointAt( t );
+		    		CameraLane = 0;
+		    	}	
+           	}
+    		else if (e.keyCode == '39') {
+       			// right arrow
+       			if(CameraLane == 0){
+       				pos = RightTube.parameters.path.getPointAt( t );
+       				CameraLane = 2;
+       			} else if(CameraLane == 1){
+       				pos = MiddleTube.parameters.path.getPointAt( t );
+       				CameraLane = 0;
+       			}
+    		}
+		}
+
+		function animate() {
+			requestAnimationFrame( animate );
+			render();
+		}
+
+		function render() {
+			var time = Date.now();
+			var looptime = 20 * 1000;
+			t = ( time % looptime ) / looptime;
+
+			if(CameraLane == 0){
+				pos = MiddleTube.parameters.path.getPointAt( t );
+			} else if(CameraLane == 1){
+				pos = LeftTube.parameters.path.getPointAt( t );
+			} else if(CameraLane == 2){
+				pos = RightTube.parameters.path.getPointAt( t );
+			}
+
+			pos.multiplyScalar( scale );
+
+			// interpolation
+			var segments = MiddleTube.tangents.length;
+			var pickt = t * segments;
+			var pick = Math.floor( pickt );
+			var pickNext = ( pick + 1 ) % segments;
+
+			binormal.subVectors( MiddleTube.binormals[ pickNext ], MiddleTube.binormals[ pick ] );
+			binormal.multiplyScalar( pickt - pick ).add( MiddleTube.binormals[ pick ] );
+
+			var dir = MiddleTube.parameters.path.getTangentAt( t );
+
+			var offset = 15;
+
+			normal.copy( binormal ).cross( dir );
+
+			// We move on a offset on its binormal
+			pos.add( normal.clone().multiplyScalar( offset ) );
+
+			splineCamera.position.copy( pos );
+
+			// Using arclength for stablization in look ahead.
+			var lookAt = MiddleTube.parameters.path.getPointAt( ( t + 30 / MiddleTube.parameters.path.getLength() ) % 1 ).multiplyScalar( scale );
+
+			// Camera Orientation 2 - up orientation via normal
+			if (!lookAhead)
+			lookAt.copy( pos ).add( dir );
+			splineCamera.matrix.lookAt(splineCamera.position, lookAt, normal);
+			splineCamera.rotation.setFromRotationMatrix( splineCamera.matrix, splineCamera.rotation.order );
+
+			Middleparent.rotation.y += ( targetRotation - Middleparent.rotation.y ) * 0.05;
+
+			renderer.render( scene, animation === true ? splineCamera : splineCamera );
+		}
+	</script>
+	</body>
+</html>
