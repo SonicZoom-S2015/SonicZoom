@@ -36,6 +36,10 @@
 		var randomVertex;
 		var increment = 0;
 
+		var t = .001;
+
+		var speed = .00000;
+
 		var prevPoint = new THREE.Vector3(0, 0, 0);
         for (var i = 0; i < 50; i++){
             var randomX = prevPoint.x + 15;// + Math.round(Math.random() * 1.5);
@@ -73,12 +77,6 @@
 		RightPath = RightSpline;
 
 		PipePath = MiddleSpline;
-
-		var s;
-		//Init
-
-		//Time
-		var t;
 
 		//Camera Position
 		var pos;
@@ -247,6 +245,18 @@
        				CameraLane = 0;
        			}
     		}
+			else if(e.keyCode == '38'){
+				//up arrow
+				if(speed < .0025){
+					speed = speed + .00001;
+				}
+			}
+			else if(e.keyCode == '40'){
+				//down arrow
+				if(speed > .00035){
+					speed = speed - .00005;
+				}
+			}
 		}
 
 		function animate() {
@@ -254,10 +264,13 @@
 			render();
 		}
 
+
 		function render() {
-			var time = Date.now();
-			var looptime = 20 * 1000;
-			t = ( time % looptime ) / looptime;
+			t = t + speed;
+
+			if(speed < .00035){
+				speed = speed + .000001;
+			}
 
 			if(CameraLane == 0){
 				pos = MiddleTube.parameters.path.getPointAt( t );
