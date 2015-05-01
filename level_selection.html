@@ -1,0 +1,124 @@
+<html>
+<head>
+	<title>Game Start</title>
+	<link rel="stylesheet" type="text/css" href="CSS/start_level.css">
+	<script type="text/javascript" src="mespeak.js"></script>
+</head>
+
+<body>
+<script src='JS/THREEx.WindowResize.js'></script>
+<script src="JS/three.min.js"></script>
+<script src='JS/mespeak.js'></script>
+<script>
+	meSpeak.loadConfig("JSON/mespeak_config.json");
+	meSpeak.loadVoice("JSON/en.json");
+	meSpeak.speak('Level One')
+</script>
+<script>
+	var scene = new THREE.Scene();
+	var camera = new THREE.PerspectiveCamera(120, window.innerWidth/window.innerHeight, 0.1, 1000 );
+	var renderer = new THREE.WebGLRenderer();
+
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	document.body.appendChild( renderer.domElement );
+
+	var text = document.createElement('h2');
+	text.innerHTML = "Choose Level";
+	document.body.appendChild(text);
+
+	var lv_num = 1;
+	var btn = document.createElement("BUTTON");
+	var t = document.createTextNode(lv_num);
+	btn.setAttribute("class", "lv_btn");
+	btn.setAttribute("id", "say_lv");
+	btn.appendChild(t);
+	document.body.appendChild(btn);
+
+	document.onkeydown = keyListener;
+
+	var paused = false;
+	function keyListener(e){
+		var x = e.keyCode;
+		// Up arrow: increase level
+		if (x == 38) {
+			lv_num++;
+			if (lv_num == 6) lv_num = 1;
+			t.nodeValue = lv_num;
+			btn.appendChild(t);
+			document.body.appendChild(btn);
+			var s = lv_num.toString();
+			meSpeak.loadConfig("JSON/mespeak_config.json");
+			meSpeak.loadVoice("JSON/en.json");
+			meSpeak.speak("Level"+s);
+		}
+		// Down arrow: decrease level
+		else if (x == 40){
+			lv_num--;
+			if (lv_num == 0) lv_num = 5;
+			t.nodeValue = lv_num;
+			btn.appendChild(t);
+			document.body.appendChild(btn);
+			var n = lv_num.toString();
+			meSpeak.loadConfig("JSON/mespeak_config.json");
+			meSpeak.loadVoice("JSON/en.json");
+			meSpeak.speak("Level"+n);
+		}
+		else if (x == 27){
+			window.open("./index.html", "_self");
+		}
+		// Space: select level
+		else if (x == 32){
+			localStorage.setItem("level", lv_num);
+			localStorage.setItem("lives", 3);
+			localStorage.setItem("highScore", 0);
+			window.open("./TheTemplateLevel.html", "_self");
+		}
+		//esc key
+		else if (e.keyCode == '27') {
+			window.open("./index.html", "_self");
+			}
+	}
+	var texture = THREE.ImageUtils.loadTexture( 'Textures/menu.jpg' );
+	var backgroundMesh = new THREE.Mesh(
+			new THREE.PlaneGeometry(2, 2, 0),
+			new THREE.MeshBasicMaterial({
+				map: texture
+			}));
+
+	var geometry = new THREE.BoxGeometry( 1.5, 1.5, 1.5 );
+	var material = new THREE.MeshBasicMaterial(
+			{ map: THREE.ImageUtils.loadTexture( 'Textures/minetex.bmp' ) }
+	);
+	var cube = new THREE.Mesh( geometry, material );
+
+	cube.position.y = -3;
+	scene.add( cube );
+
+	camera.position.z = 5;
+
+	backgroundMesh.material.depthTest = false;
+	backgroundMesh.material.depthWrite = false;
+
+	var backgroundScene = new THREE.Scene();
+	var backgroundCamera = new THREE.Camera();
+	backgroundScene.add(backgroundCamera );
+	backgroundScene.add(backgroundMesh );
+
+	var render = function () {
+		requestAnimationFrame( render );
+
+		cube.rotation.x += 0.1;
+		cube.rotation.y += 0.1;
+
+		renderer.autoClear = false;
+		renderer.clear();
+		renderer.render(backgroundScene, backgroundCamera);
+		renderer.render(scene, camera);
+	};
+	render();
+
+	THREEx.WindowResize(renderer, camera);
+
+</script>
+</body>
+</html>
