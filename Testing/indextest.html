@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="//code.jquery.com/qunit/qunit-1.17.1.css">
+    <title>SonicZoom</title>
+    <style>
+        body {
+            font-family: Monospace;
+            background-color: #f0f0f0;
+            margin: 0px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+<div id="qunit"></div>
+<div id="quint-fixture"></div>
+<script src="//code.jquery.com/qunit/qunit-1.17.1.js"></script>
+<script src="//code.jquery.com/jquery-2.1.3.min.js"></script>
+<script src="IndexTests.js"></script>
+<script src="JS/three.min.js"></script>
+<script src='JS/THREEx.WindowResize.js'></script>
+<script src='JS/mespeak.js'></script>​
+<script>
+    meSpeak.loadConfig("JSON/mespeak_config.json");
+    meSpeak.loadVoice('JSON/en.json');
+
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(120, window.innerWidth/window.innerHeight, 0.1, 1000 );
+
+    if(localStorage.getItem("FinalScore") == null){
+        localStorage.setItem("FinalScore", 0);
+    }
+
+    var menuinstructions = new Audio("Audio/menuinstructions.wav");
+    var soniczoom = new Audio("Audio/soniczoom.wav");
+    var training = new Audio("Audio/training.wav");
+    var play = new Audio("Audio/startgame.wav");
+    var highscores = new Audio("Audio/highscores.wav");
+
+    var renderer = new THREE.WebGLRenderer();
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    document.body.appendChild( renderer.domElement );
+
+    var Training = document.createElement('div');
+    Training.style.position = 'absolute';
+    Training.style.width = 100;
+    Training.style.height = 100;
+    Training.innerHTML = "Training";
+    Training.style.top = window.innerHeight*.36 + 'px';
+    Training.style.left = window.innerWidth*.62 + 'px';
+    Training.style.color = "Yellow";
+    Training.style.fontSize = 50 + 'px';
+    document.body.appendChild(Training);
+
+    var Start_Game = document.createElement('div');
+    Start_Game.style.position = 'absolute';
+    Start_Game.style.width = 500;
+    Start_Game.style.height = 100;
+    Start_Game.innerHTML = "Start Game";
+    Start_Game.style.top = window.innerHeight*.46 + 'px';
+    Start_Game.style.left = window.innerWidth*.62 + 'px';
+    Start_Game.style.color = "Red";
+    Start_Game.style.fontSize = 50 + 'px';
+    document.body.appendChild(Start_Game);
+
+    var High_Score = document.createElement('div');
+    High_Score.style.position = 'absolute';
+    High_Score.style.width = 500;
+    High_Score.style.height = 100;
+    High_Score.innerHTML = "High Scores";
+    High_Score.style.top = window.innerHeight*.56 + 'px';
+    High_Score.style.left = window.innerWidth*.62 + 'px';
+    High_Score.style.color = "Red";
+    High_Score.style.fontSize = 50 + 'px';
+    document.body.appendChild(High_Score);
+
+    var Restart = document.createElement('div');
+    Restart.style.position = 'absolute';
+    Restart.style.width = 400;
+    Restart.style.height = 100;
+    Restart.innerHTML = "Restart High Score";
+    Restart.style.top = window.innerHeight*.66 + 'px';
+    Restart.style.left = window.innerWidth*.62 + 'px';
+    Restart.style.color = "Red";
+    Restart.style.fontSize = 50 + 'px';
+    document.body.appendChild(Restart);
+
+    var geometry = new THREE.BoxGeometry( 1, 1, 1 );
+    var material = new THREE.MeshBasicMaterial({
+        map: THREE.ImageUtils.loadTexture('Textures/cointex.bmp')
+    });
+    var cube = new THREE.Mesh( geometry, material );
+    scene.add( cube );
+
+    camera.position.z = 5;
+
+    var texture = THREE.ImageUtils.loadTexture( 'Textures/menu.jpg' );
+    var backgroundMesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(2, 2, 0),
+            new THREE.MeshBasicMaterial({
+                map: texture
+            }));
+
+    backgroundMesh.material.depthTest = false;
+    backgroundMesh.material.depthWrite = false;
+
+    // Create your background scene
+    var backgroundScene = new THREE.Scene();
+    var backgroundCamera = new THREE.Camera();
+    backgroundScene.add(backgroundCamera );
+    backgroundScene.add(backgroundMesh );
+
+    camera.setViewOffset(window.innerWidth, window.innerHeight, window.innerWidth * -.06, window.innerHeight *.1, window.innerWidth, window.innerHeight);
+    var arrowDir = 0;
+
+    document.onkeydown = checkKey;
+
+    soniczoom.play();
+    var currentrunning = menuinstructions;
+    currentrunning.play();
+
+    var callback = function(){
+        Training.style.top = window.innerHeight*.36 + 'px';
+        Training.style.left = window.innerWidth*.62 + 'px';
+
+        Start_Game.style.top = window.innerHeight*.46 + 'px';
+        Start_Game.style.left = window.innerWidth*.62 + 'px';
+
+        High_Score.style.top = window.innerHeight*.56 + 'px';
+        High_Score.style.left = window.innerWidth*.62 + 'px';
+
+        Restart.style.top = window.innerHeight*.56 + 'px';
+        Restart.style.left = window.innerWidth*.62 + 'px';
+    };
+    window.addEventListener('resize', callback, false);
+    THREEx.WindowResize(renderer, camera);
+
+    function checkKey(e){
+        // Up Arrow
+        if(e.keyCode == '38') {
+            if (arrowDir == 0) {
+                camera.setViewOffset(window.innerWidth, window.innerHeight, window.innerWidth * -.06, window.innerHeight * -.2, window.innerWidth, window.innerHeight);
+                camera.updateProjectionMatrix();
+                Training.style.color = "Red";
+                Restart.style.color = "Yellow";
+                arrowDir = 3;
+                currentrunning.pause();
+                currentrunning.currentTime = 0;
+
+                meSpeak.speak("Restart high score");
+            } else if (arrowDir == 1) {
+                camera.setViewOffset(window.innerWidth, window.innerHeight, window.innerWidth * -.06, window.innerHeight * .1, window.innerWidth, window.innerHeight);
+                camera.updateProjectionMatrix();
+                Start_Game.style.color = "Red";
+                Training.style.color = "Yellow";
+                arrowDir = 0;
+                currentrunning.pause();
+                currentrunning.currentTime = 0;
+                currentrunning = training;
+                currentrunning.play();
+            } else if (arrowDir == 2) {
+                camera.setViewOffset(window.innerWidth, window.innerHeight, window.innerWidth * -.06, window.innerHeight * -.0001, window.innerWidth, window.innerHeight);
+                camera.updateProjectionMatrix();
+                High_Score.style.color = "Red";
+                Start_Game.style.color = "Yellow";
+                arrowDir = 1;
+                currentrunning.pause();
+                currentrunning.currentTime = 0;
+                currentrunning = play;
+                currentrunning.play();
+            } else if (arrowDir == 3) {
+                camera.setViewOffset(window.innerWidth, window.innerHeight, window.innerWidth * -.06, window.innerHeight * -.1, window.innerWidth, window.innerHeight);
+                camera.updateProjectionMatrix();
+                Restart.style.color = "Red";
+                High_Score.style.color = "Yellow";
+                arrowDir = 2;
+                currentrunning.pause();
+                meSpeak.stop();
+                currentrunning.currentTime = 0;
+                currentrunning = highscores;
+                currentrunning.play();
+            }
+        }
+        else if (e.keyCode == '40') {
+            // Down Arrow
+            if (arrowDir == 0) {
+                camera.setViewOffset(window.innerWidth, window.innerHeight, window.innerWidth * -.06, window.innerHeight * -.0001, window.innerWidth, window.innerHeight);
+                camera.updateProjectionMatrix();
+                Training.style.color = "Red";
+                Start_Game.style.color = "Yellow";
+                arrowDir = 1;
+                currentrunning.pause();
+                currentrunning.currentTime = 0;
+                currentrunning = play;
+                currentrunning.play();
+            } else if (arrowDir == 1) {
+                camera.setViewOffset(window.innerWidth, window.innerHeight, window.innerWidth * -.06, window.innerHeight * -.1, window.innerWidth, window.innerHeight);
+                camera.updateProjectionMatrix();
+                Start_Game.style.color = "Red";
+                High_Score.style.color = "Yellow";
+                arrowDir = 2;
+                currentrunning.pause();
+                currentrunning.currentTime = 0;
+                currentrunning = highscores;
+                currentrunning.play();
+            } else if (arrowDir == 2) {
+                camera.setViewOffset(window.innerWidth, window.innerHeight, window.innerWidth * -.06, window.innerHeight * -.2, window.innerWidth, window.innerHeight);
+                camera.updateProjectionMatrix();
+                High_Score.style.color = "Red";
+                Restart.style.color = "Yellow";
+                arrowDir = 3;
+                currentrunning.pause();
+                currentrunning.currentTime = 0;
+                meSpeak.speak("Restart high score");
+            } else if (arrowDir == 3) {
+                camera.setViewOffset(window.innerWidth, window.innerHeight, window.innerWidth * -.06, window.innerHeight * .1, window.innerWidth, window.innerHeight);
+                camera.updateProjectionMatrix();
+                Restart.style.color = "Red";
+                Training.style.color = "Yellow";
+                arrowDir = 0;
+                currentrunning.pause();
+                meSpeak.stop();
+                currentrunning.currentTime = 0;
+                currentrunning = training;
+                currentrunning.play();
+            }
+        } else if (e.keyCode == '32'){
+            //Space
+            if(arrowDir == 0){
+                window.open("./tutorial.html","_self");
+            } else if (arrowDir == 1){
+                window.open("./level_selection.html", "_self");
+            }else if (arrowDir == 2) {
+                var score = localStorage.getItem("FinalScore");
+                var score = parseInt(score);
+                if(score == 0){
+                    meSpeak.speak(0);
+                }else {
+                    meSpeak.speak(score.toString());
+                }
+            } else if (arrowDir == 3){
+                localStorage.setItem("FinalScore", 0);
+            }
+        }
+    }
+    var render = function () {
+        requestAnimationFrame( render );
+
+        cube.rotation.x += 0.1;
+        cube.rotation.y += 0.1;
+
+        renderer.autoClear = false;
+        renderer.clear();
+        renderer.render(backgroundScene, backgroundCamera);
+        renderer.render(scene, camera);
+    };
+
+    render();
+</script>
+</body>
+</html>
